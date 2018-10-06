@@ -57,7 +57,7 @@ namespace LHGames.Bot
             Point adjacentResource = GetAdjacentResource(map);
 
             // prioritize this and upgrade
-            if(PlayerInfo.Position == PlayerInfo.HouseLocation)
+            /*if(PlayerInfo.Position == PlayerInfo.HouseLocation)
             {
                 int collectingLevel = PlayerInfo.GetUpgradeLevel(UpgradeType.CollectingSpeed);
                 int carryingLevel = PlayerInfo.GetUpgradeLevel(UpgradeType.CarryingCapacity);
@@ -70,7 +70,7 @@ namespace LHGames.Bot
                 {
                     return AIHelper.CreateUpgradeAction(UpgradeType.CarryingCapacity);
                 }
-            }
+            }*/
 
             if (!isFull && adjacentResource == null && possibleResources.Count > 0)
             {        
