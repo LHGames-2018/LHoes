@@ -28,15 +28,92 @@ namespace LHGames.Bot
         /// <returns>The action you wish to execute.</returns>
         internal string ExecuteTurn(Map map, IEnumerable<IPlayer> visiblePlayers)
         {
-            // TODO: Implement your AI here.
-            if (map.GetTileAt(PlayerInfo.Position.X + _currentDirection, PlayerInfo.Position.Y) == TileContent.Wall)
+            string action = "";
+            bool isFull = PlayerInfo.CarriedResources >= PlayerInfo.CarryingCapacity;
+            List<Tile> possibleResources = new List<Tile>();
+            foreach (Tile tile in map.GetVisibleTiles())
             {
-                _currentDirection *= -1;
+                float distance = MathF.Sqrt(MathF.Pow(PlayerInfo.HouseLocation.X - tile.Position.X, 2)
+                    + MathF.Pow(PlayerInfo.HouseLocation.Y - tile.Position.Y, 2));
+                if (tile.TileType == TileContent.Resource && distance < 8f)
+                {
+                    possibleResources.Add(tile);
+                }
+            }
+
+            Point adjacentResource = GetAdjacentResource(map);
+            if (!isFull && adjacentResource == null && possibleResources.Count > 0)
+            {        
+                if (possibleResources.Count > 0)
+                    action = GoTo(possibleResources[0].Position, map, true);
+                else
+                {
+                    Console.Out.WriteLine("Oups, no action for resource");
+                    action = AIHelper.CreateEmptyAction();
+                }
+            }
+            else if(!isFull && adjacentResource != null)
+            {
+                action = AIHelper.CreateCollectAction(adjacentResource);
+            }
+            else if(isFull || possibleResources.Count == 0)
+            {
+                action = GoTo(PlayerInfo.HouseLocation, map, true);
             }
 
             var data = StorageHelper.Read<TestClass>("Test");
             Console.WriteLine(data?.Test);
-            return AIHelper.CreateMoveAction(new Point(_currentDirection, 0));
+            return action;
+        }
+
+        private Point GetAdjacentResource(Map map)
+        {
+            if (map.GetTileAt(PlayerInfo.Position.X + 1, PlayerInfo.Position.Y) == TileContent.Resource)
+                return new Point(1, 0);
+            else if (map.GetTileAt(PlayerInfo.Position.X - 1, PlayerInfo.Position.Y) == TileContent.Resource)
+                return new Point(-1, 0);
+            else if (map.GetTileAt(PlayerInfo.Position.X, PlayerInfo.Position.Y + 1) == TileContent.Resource)
+                return new Point(0, 1);
+            else if (map.GetTileAt(PlayerInfo.Position.X, PlayerInfo.Position.Y - 1) == TileContent.Resource)
+                return new Point(0, -1);
+            else
+                return null;
+        }
+
+        private string CollectRessource(Point direction)
+        {
+            return AIHelper.CreateCollectAction(direction);
+        }
+
+        private string GoTo(Point location, Map map, bool moveHorizontally)
+        {
+            Point direction = null;
+            if (moveHorizontally)
+            {
+                if (PlayerInfo.Position.X != location.X)
+                    direction = new Point(MathF.Sign(location.X - PlayerInfo.Position.X), 0);
+                else
+                    return GoTo(location, map, false);
+
+                TileContent content = map.GetTileAt(PlayerInfo.Position.X + direction.X, PlayerInfo.Position.Y + direction.Y);
+                if (content != TileContent.Empty && content != TileContent.House)
+                    return GoTo(location, map, false);
+                else
+                    return AIHelper.CreateMoveAction(direction);
+            }
+            else
+            {
+                if (PlayerInfo.Position.Y != location.Y)
+                    direction = new Point(MathF.Sign(location.Y - PlayerInfo.Position.Y), 0);
+                else
+                    return GoTo(location, map, true);
+
+                TileContent content = map.GetTileAt(PlayerInfo.Position.X + direction.X, PlayerInfo.Position.Y + direction.Y);
+                if (content != TileContent.Empty && content != TileContent.House)
+                    return GoTo(location, map, true);
+                else
+                    return AIHelper.CreateMoveAction(direction);
+            }
         }
 
         /// <summary>
