@@ -96,16 +96,16 @@ namespace LHGames.Bot
             // prioritize this and upgrade
             if (PlayerInfo.Position == PlayerInfo.HouseLocation)
             {
-                int carryingLevel = PlayerInfo.GetUpgradeLevel(UpgradeType.CarryingCapacity);
+                //int carryingLevel = PlayerInfo.GetUpgradeLevel(UpgradeType.CarryingCapacity);
+                int maxHealthLevel = PlayerInfo.GetUpgradeLevel(UpgradeType.MaximumHealth);
                 int attackLevel = PlayerInfo.GetUpgradeLevel(UpgradeType.AttackPower);
-                if (carryingLevel <= attackLevel && carryingLevel < 5
-                    && UpgradeCosts[carryingLevel + 1] <= PlayerInfo.TotalResources)
-                {
-                    return AIHelper.CreateUpgradeAction(UpgradeType.CarryingCapacity);
-                }
-                else if (attackLevel < 5 && UpgradeCosts[attackLevel + 1] <= PlayerInfo.TotalResources)
+                if (attackLevel < 4 && UpgradeCosts[attackLevel + 1] <= PlayerInfo.TotalResources)
                 {
                     return AIHelper.CreateUpgradeAction(UpgradeType.AttackPower);
+                }
+                else if (maxHealthLevel < 5 && UpgradeCosts[maxHealthLevel + 1] <= PlayerInfo.TotalResources)
+                {
+                    return AIHelper.CreateUpgradeAction(UpgradeType.MaximumHealth);
                 }
             }
 
