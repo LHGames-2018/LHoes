@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace LHGames.Behaviours
 {
-    public class MoveBehaviour
+    public abstract class BaseBehaviour
     {
     }
 }

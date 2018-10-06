@@ -43,8 +43,7 @@ namespace LHGames.Bot
             List<Tile> possibleResources = new List<Tile>();
             foreach (Tile tile in map.GetVisibleTiles())
             {
-                double distance = Point.Distance(PlayerInfo.HouseLocation, tile.Position);
-                if (tile.TileType == TileContent.Resource && distance < 8f)
+                if (tile.TileType == TileContent.Resource)
                 {
                     possibleResources.Add(tile);
                 }
@@ -58,16 +57,16 @@ namespace LHGames.Bot
             // prioritize this and upgrade
             if(PlayerInfo.Position == PlayerInfo.HouseLocation)
             {
-                int collectingLevel = PlayerInfo.GetUpgradeLevel(UpgradeType.CollectingSpeed);
                 int carryingLevel = PlayerInfo.GetUpgradeLevel(UpgradeType.CarryingCapacity);
-                if (collectingLevel <= carryingLevel && collectingLevel < 5 
-                    && UpgradeCosts[collectingLevel + 1] <= PlayerInfo.TotalResources)
-                {
-                    return AIHelper.CreateUpgradeAction(UpgradeType.CollectingSpeed);
-                }
-                else if (carryingLevel < 5 && UpgradeCosts[carryingLevel + 1] <= PlayerInfo.TotalResources)
+                int defenseLevel = PlayerInfo.GetUpgradeLevel(UpgradeType.Defence);
+                if (carryingLevel <= defenseLevel && carryingLevel < 5 
+                    && UpgradeCosts[carryingLevel + 1] <= PlayerInfo.TotalResources)
                 {
                     return AIHelper.CreateUpgradeAction(UpgradeType.CarryingCapacity);
+                }
+                else if (defenseLevel < 5 && UpgradeCosts[defenseLevel + 1] <= PlayerInfo.TotalResources)
+                {
+                    return AIHelper.CreateUpgradeAction(UpgradeType.Defence);
                 }
             }
 
@@ -126,7 +125,13 @@ namespace LHGames.Bot
 
                 TileContent content = map.GetTileAt(PlayerInfo.Position.X + direction.X, PlayerInfo.Position.Y + direction.Y);
                 if (content != TileContent.Empty && content != TileContent.House)
-                    return GoTo(location, map, false);
+                {
+                    if (content == TileContent.Wall)
+                        return AIHelper.CreateMeleeAttackAction(direction);
+                    else
+                        return GoTo(location, map, false);
+
+                }
                 else
                     return AIHelper.CreateMoveAction(direction);
             }
@@ -139,7 +144,13 @@ namespace LHGames.Bot
 
                 TileContent content = map.GetTileAt(PlayerInfo.Position.X + direction.X, PlayerInfo.Position.Y + direction.Y);
                 if (content != TileContent.Empty && content != TileContent.House)
-                    return GoTo(location, map, true);
+                {
+                    if (content == TileContent.Wall)
+                        return AIHelper.CreateMeleeAttackAction(direction);
+                    else
+                        return GoTo(location, map, true);
+
+                }
                 else
                     return AIHelper.CreateMoveAction(direction);
             }
