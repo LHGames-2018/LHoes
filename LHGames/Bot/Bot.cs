@@ -40,6 +40,44 @@ namespace LHGames.Bot
         internal string ExecuteTurn(Map map, IEnumerable<IPlayer> visiblePlayers)
         {
             string action = "";
+
+            List<IPlayer> targets = new List<IPlayer>();
+            foreach(IPlayer player in visiblePlayers)
+            {
+                if (Point.Distance(PlayerInfo.Position, player.Position) <= 5f)
+                    targets.Add(player);
+            }
+
+            targets.Sort((a, b) => Point.Distance(a.Position, PlayerInfo.Position).CompareTo(Point.Distance(b.Position, PlayerInfo.Position)));
+
+            if (targets.Count == 0)
+                action = MineResources(map);
+            else
+                action = AttackPlayer(targets[0], map);
+                       
+            var data = StorageHelper.Read<TestClass>("Test");
+            Console.WriteLine(data?.Test);
+            return action;
+        }
+
+        private string AttackPlayer(IPlayer player, Map map)
+        {
+            string action = "";
+            if(Point.Distance(PlayerInfo.Position, player.Position) <= 1d)
+            {
+                action = AIHelper.CreateMeleeAttackAction(player.Position - PlayerInfo.Position);
+            }
+            else
+            {
+                action = GoTo(player.Position, map, true);
+            }
+
+            return action;
+        }
+
+        private string MineResources(Map map)
+        {
+            string action = "";
             bool isFull = PlayerInfo.CarriedResources >= PlayerInfo.CarryingCapacity;
             List<Tile> possibleResources = new List<Tile>();
             foreach (Tile tile in map.GetVisibleTiles())
@@ -56,23 +94,23 @@ namespace LHGames.Bot
             Point adjacentResource = GetAdjacentResource(map);
 
             // prioritize this and upgrade
-            if(PlayerInfo.Position == PlayerInfo.HouseLocation)
+            if (PlayerInfo.Position == PlayerInfo.HouseLocation)
             {
                 int carryingLevel = PlayerInfo.GetUpgradeLevel(UpgradeType.CarryingCapacity);
-                int defenseLevel = PlayerInfo.GetUpgradeLevel(UpgradeType.Defence);
-                if (carryingLevel <= defenseLevel && carryingLevel < 5 
+                int attackLevel = PlayerInfo.GetUpgradeLevel(UpgradeType.AttackPower);
+                if (carryingLevel <= attackLevel && carryingLevel < 5
                     && UpgradeCosts[carryingLevel + 1] <= PlayerInfo.TotalResources)
                 {
                     return AIHelper.CreateUpgradeAction(UpgradeType.CarryingCapacity);
                 }
-                else if (defenseLevel < 5 && UpgradeCosts[defenseLevel + 1] <= PlayerInfo.TotalResources)
+                else if (attackLevel < 5 && UpgradeCosts[attackLevel + 1] <= PlayerInfo.TotalResources)
                 {
-                    return AIHelper.CreateUpgradeAction(UpgradeType.Defence);
+                    return AIHelper.CreateUpgradeAction(UpgradeType.AttackPower);
                 }
             }
 
             if (!isFull && adjacentResource == null && possibleResources.Count > 0)
-            {        
+            {
                 if (possibleResources.Count > 0)
                     action = GoTo(possibleResources[0].Position, map, true);
                 else
@@ -81,17 +119,15 @@ namespace LHGames.Bot
                     action = AIHelper.CreateEmptyAction();
                 }
             }
-            else if(!isFull && adjacentResource != null)
+            else if (!isFull && adjacentResource != null)
             {
                 action = AIHelper.CreateCollectAction(adjacentResource);
             }
-            else if(isFull || possibleResources.Count == 0)
+            else if (isFull || possibleResources.Count == 0)
             {
                 action = GoTo(PlayerInfo.HouseLocation, map, true);
             }
 
-            var data = StorageHelper.Read<TestClass>("Test");
-            Console.WriteLine(data?.Test);
             return action;
         }
 
