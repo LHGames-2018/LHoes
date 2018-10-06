@@ -9,6 +9,16 @@ namespace LHGames.Bot
         internal IPlayer PlayerInfo { get; set; }
         private int _currentDirection = 1;
 
+        public static Dictionary<int, int> UpgradeCosts = new Dictionary<int, int>()
+    {
+        {0, 0 },
+        {1, 10000 },
+        {2, 15000 },
+        {3, 25000 },
+        {4, 50000 },
+        {5, 100000 }
+    };
+
         internal Bot() { }
 
         /// <summary>
@@ -45,6 +55,23 @@ namespace LHGames.Bot
             possibleResources.Sort((a, b) => Point.Distance(a.Position, PlayerInfo.Position).CompareTo(Point.Distance(b.Position, PlayerInfo.Position)));
 
             Point adjacentResource = GetAdjacentResource(map);
+
+            // prioritize this and upgrade
+            if(PlayerInfo.Position == PlayerInfo.HouseLocation)
+            {
+                int collectingLevel = PlayerInfo.GetUpgradeLevel(UpgradeType.CollectingSpeed);
+                int carryingLevel = PlayerInfo.GetUpgradeLevel(UpgradeType.CarryingCapacity);
+                if (collectingLevel <= carryingLevel && collectingLevel < 5 
+                    && UpgradeCosts[collectingLevel + 1] <= PlayerInfo.TotalResources)
+                {
+                    return AIHelper.CreateUpgradeAction(UpgradeType.CollectingSpeed);
+                }
+                else if (carryingLevel < 5 && UpgradeCosts[carryingLevel + 1] <= PlayerInfo.TotalResources)
+                {
+                    return AIHelper.CreateUpgradeAction(UpgradeType.CarryingCapacity);
+                }
+            }
+
             if (!isFull && adjacentResource == null && possibleResources.Count > 0)
             {        
                 if (possibleResources.Count > 0)
