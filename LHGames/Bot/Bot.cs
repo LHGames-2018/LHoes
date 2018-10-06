@@ -2,23 +2,30 @@
 using System.Collections.Generic;
 using LHGames.Helper;
 using LHGames.Interfaces;
+using System.Linq;
 
 namespace LHGames.Bot
 {
     internal class Bot
     {
         internal IPlayer PlayerInfo { get; set; }
+        internal List<string> Leaderboard { get; set; }
+
         private int _currentDirection = 1;
 
+        private Point _temporaryTarget = null;
+
+        private string _lastPlayerKilled = "";
+
         public static Dictionary<int, int> UpgradeCosts = new Dictionary<int, int>()
-    {
-        {0, 0 },
-        {1, 10000 },
-        {2, 15000 },
-        {3, 25000 },
-        {4, 50000 },
-        {5, 100000 }
-    };
+        {
+            {0, 0 },
+            {1, 10000 },
+            {2, 15000 },
+            {3, 25000 },
+            {4, 50000 },
+            {5, 100000 }
+        };
 
         internal Bot() { }
 
@@ -26,9 +33,10 @@ namespace LHGames.Bot
         /// Gets called before ExecuteTurn. This is where you get your bot's state.
         /// </summary>
         /// <param name="playerInfo">Your bot's current state.</param>
-        internal void BeforeTurn(IPlayer playerInfo)
+        internal void BeforeTurn(GameInfo game)
         {
-            PlayerInfo = playerInfo;
+            PlayerInfo = game.Player;
+            Leaderboard = game.Leaderboard;
         }
 
         /// <summary>
@@ -43,8 +51,8 @@ namespace LHGames.Bot
 
             List<IPlayer> targets = new List<IPlayer>();
             foreach(IPlayer player in visiblePlayers)
-            {
-                if (Point.Distance(PlayerInfo.Position, player.Position) <= 5f)
+            {                
+                if(player.Name != "LHoes" && player.Name != "AI-oye" && player.Name != _lastPlayerKilled)
                     targets.Add(player);
             }
 
@@ -65,6 +73,9 @@ namespace LHGames.Bot
             string action = "";
             if(Point.Distance(PlayerInfo.Position, player.Position) <= 1d)
             {
+                bool isDead = DamageInflicted(player) >= player.Health;
+                if (isDead)
+                    _lastPlayerKilled = player.Name;
                 action = AIHelper.CreateMeleeAttackAction(player.Position - PlayerInfo.Position);
             }
             else
@@ -73,6 +84,15 @@ namespace LHGames.Bot
             }
 
             return action;
+        }
+
+        private int DamageInflicted(IPlayer player)
+        {
+            int swordDamage = PlayerInfo.CarriedItems.Contains(PurchasableItem.Sword) ? 1 : 0;
+            int shieldDefence = player.CarriedItems.Contains(PurchasableItem.Shield) ? 1 : 0;
+            int damage = (int)MathF.Floor(3 + PlayerInfo.AttackPower + swordDamage - 2 * MathF.Pow(player.Defence + shieldDefence, 0.6f));
+
+            return damage;
         }
 
         private string MineResources(Map map)
@@ -153,6 +173,11 @@ namespace LHGames.Bot
         private string GoTo(Point location, Map map, bool moveHorizontally)
         {
             Point direction = null;
+            if (_temporaryTarget != null && PlayerInfo.Position != _temporaryTarget)
+                location = _temporaryTarget;
+            else if (PlayerInfo.Position == _temporaryTarget)
+                _temporaryTarget = null;
+
             if (moveHorizontally)
             {
                 if (PlayerInfo.Position.X != location.X)
@@ -165,9 +190,11 @@ namespace LHGames.Bot
                 {
                     if (content == TileContent.Wall)
                         return AIHelper.CreateMeleeAttackAction(direction);
-                    else
-                        return GoTo(location, map, false);
-
+                    else if(PlayerInfo.Position.Y == location.Y)
+                    {
+                        _temporaryTarget = FindTemporaryTarget(PlayerInfo.Position, location, true, map);
+                    }
+                    return GoTo(location, map, false);
                 }
                 else
                     return AIHelper.CreateMoveAction(direction);
@@ -184,13 +211,73 @@ namespace LHGames.Bot
                 {
                     if (content == TileContent.Wall)
                         return AIHelper.CreateMeleeAttackAction(direction);
-                    else
-                        return GoTo(location, map, true);
-
+                    else if(PlayerInfo.Position.X == location.X)
+                    {
+                        _temporaryTarget = FindTemporaryTarget(PlayerInfo.Position, location, false, map);
+                    }    
+                    return GoTo(location, map, true);
                 }
                 else
                     return AIHelper.CreateMoveAction(direction);
             }
+        }
+
+        private Point FindTemporaryTarget(Point position, Point location, bool stuckHorizontal, Map map)
+        {
+            if(stuckHorizontal)
+            {
+                bool isLeft = location.X > position.X;
+                if(isLeft)
+                {
+                    for (int j = position.Y - 1; j <= position.Y + 1; j++)                        
+                    {
+                        for (int i = location.X; i <= position.X - 1; i++)
+                        {
+                            if (j != position.Y && map.GetTileAt(i, j) == TileContent.Empty)
+                                return new Point(i, j);
+                        }
+                    }
+                }
+                else
+                {
+                    for (int j = position.Y - 1; j <= position.Y + 1; j++)                        
+                    {
+                        for (int i = position.X + 1; i <= location.X; i++)
+                        {
+                            if (j != position.Y && map.GetTileAt(i, j) == TileContent.Empty)
+                                return new Point(i, j);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                bool isUp = location.Y > position.Y;
+                if (isUp)
+                {
+                    for (int i = position.X - 1; i <= position.X + 1; i++)
+                    {
+                        for (int j = position.Y + 1; j <= location.Y; j++)
+                        {
+                            if (i != position.X && map.GetTileAt(i, j) == TileContent.Empty)
+                                return new Point(i, j);
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = position.X - 1; i <= position.X + 1; i++)
+                    {
+                        for (int j = location.Y; j <= position.Y - 1; j++)
+                        {
+                            if (i != position.X && map.GetTileAt(i, j) == TileContent.Empty)
+                                return new Point(i, j);
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

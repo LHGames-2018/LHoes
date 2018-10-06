@@ -25,7 +25,7 @@ namespace StarterProject.Web.Api.Controllers
             GameInfo gameInfo = JsonConvert.DeserializeObject<GameInfo>(data);
             var map = new Map(gameInfo.CustomSerializedMap, gameInfo.xMin, gameInfo.yMin, gameInfo.WallsAreBreakable);
 
-            playerBot.BeforeTurn(gameInfo.Player);
+            playerBot.BeforeTurn(gameInfo);
             var playerAction = playerBot.ExecuteTurn(map, gameInfo.OtherPlayers.Select(p => p as IPlayer));
 
             playerBot.AfterTurn();
