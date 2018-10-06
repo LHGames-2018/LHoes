@@ -43,8 +43,7 @@ namespace LHGames.Bot
             List<Tile> possibleResources = new List<Tile>();
             foreach (Tile tile in map.GetVisibleTiles())
             {
-                double distance = Point.Distance(PlayerInfo.HouseLocation, tile.Position);//MathF.Sqrt(MathF.Pow(PlayerInfo.HouseLocation.X - tile.Position.X, 2)
-                    //+ MathF.Pow(PlayerInfo.HouseLocation.Y - tile.Position.Y, 2));
+                double distance = Point.Distance(PlayerInfo.HouseLocation, tile.Position);
                 if (tile.TileType == TileContent.Resource && distance < 8f)
                 {
                     possibleResources.Add(tile);
@@ -72,8 +71,7 @@ namespace LHGames.Bot
                 }
             }
 
-            action = AIHelper.CreateMoveAction(new Point(0, 1));
-            /*if (!isFull && adjacentResource == null && possibleResources.Count > 0)
+            if (!isFull && adjacentResource == null && possibleResources.Count > 0)
             {        
                 if (possibleResources.Count > 0)
                     action = GoTo(possibleResources[0].Position, map, true);
@@ -90,7 +88,7 @@ namespace LHGames.Bot
             else if(isFull || possibleResources.Count == 0)
             {
                 action = GoTo(PlayerInfo.HouseLocation, map, true);
-            }*/
+            }
 
             var data = StorageHelper.Read<TestClass>("Test");
             Console.WriteLine(data?.Test);
