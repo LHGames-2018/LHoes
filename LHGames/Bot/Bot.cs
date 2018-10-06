@@ -104,7 +104,7 @@ namespace LHGames.Bot
             else
             {
                 if (PlayerInfo.Position.Y != location.Y)
-                    direction = new Point(MathF.Sign(location.Y - PlayerInfo.Position.Y), 0);
+                    direction = new Point(0, MathF.Sign(location.Y - PlayerInfo.Position.Y));
                 else
                     return GoTo(location, map, true);
 
