@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using LHGames.Helper;
+using LHGames.Interfaces;
 
 namespace LHGames.Bot
 {
@@ -157,4 +158,87 @@ namespace LHGames.Bot
 class TestClass
 {
     public string Test { get; set; }
+}
+
+class BreadthFirstSearch
+{
+    static void Search(Map map, Point playerPos)
+    {
+
+        var frontier = new Queue<Point>();
+        frontier.Enqueue(playerPos);
+
+        var visited = new HashSet<Point>();
+        visited.Add(playerPos);
+
+        while (frontier.Count > 0)
+        {
+            var current = frontier.Dequeue();
+
+            Console.WriteLine("Visiting {0}", current);
+
+            var neighbors = new Queue<Point>();
+            neighbors.Enqueue(new Point(playerPos.X, playerPos.Y - 1));
+            neighbors.Enqueue(new Point(playerPos.X, playerPos.Y + 1));
+            neighbors.Enqueue(new Point(playerPos.X + 1, playerPos.Y));
+            neighbors.Enqueue(new Point(playerPos.X - 1, playerPos.Y));
+            
+
+            while(neighbors.Count != 0)
+            {
+                Point p = neighbors.Dequeue();
+
+                if (!visited.Contains(p)) {
+                    frontier.Enqueue(p);
+                    visited.Add(p);
+                }
+            }
+        }
+    }
+}
+
+public class AStarSearch
+{
+    public Dictionary<Point, Point> cameFrom = new Dictionary<Point, Point>();
+    public Dictionary<Point, double> costSoFar = new Dictionary<Point, double>();
+
+    // Note: a generic version of A* would abstract over Location and
+    // also Heuristic
+    static public double Heuristic(Point a, Point b)
+    {
+        return Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);
+    }
+
+    public AStarSearch(IWeightedGraph<Point> graph, Point start, Point goal)
+    {
+        var frontier = new PriorityQueue<Point>();
+        frontier.Enqueue(start, 0);
+
+        cameFrom[start] = start;
+        costSoFar[start] = 0;
+
+        while (frontier.Count > 0)
+        {
+            var current = frontier.Dequeue();
+
+            if (current.Equals(goal))
+            {
+                break;
+            }
+
+            foreach (var next in graph.Neighbors(current))
+            {
+                double newCost = costSoFar[current]
+                    + graph.Cost(current, next);
+                if (!costSoFar.ContainsKey(next)
+                    || newCost < costSoFar[next])
+                {
+                    costSoFar[next] = newCost;
+                    double priority = newCost + Heuristic(next, goal);
+                    frontier.Enqueue(next, priority);
+                    cameFrom[next] = current;
+                }
+            }
+        }
+    }
 }
