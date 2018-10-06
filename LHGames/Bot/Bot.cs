@@ -33,13 +33,16 @@ namespace LHGames.Bot
             List<Tile> possibleResources = new List<Tile>();
             foreach (Tile tile in map.GetVisibleTiles())
             {
-                float distance = MathF.Sqrt(MathF.Pow(PlayerInfo.HouseLocation.X - tile.Position.X, 2)
-                    + MathF.Pow(PlayerInfo.HouseLocation.Y - tile.Position.Y, 2));
+                double distance = Point.Distance(PlayerInfo.HouseLocation, tile.Position);//MathF.Sqrt(MathF.Pow(PlayerInfo.HouseLocation.X - tile.Position.X, 2)
+                    //+ MathF.Pow(PlayerInfo.HouseLocation.Y - tile.Position.Y, 2));
                 if (tile.TileType == TileContent.Resource && distance < 8f)
                 {
                     possibleResources.Add(tile);
                 }
             }
+
+            // Sort resources
+            possibleResources.Sort((a, b) => Point.Distance(a.Position, PlayerInfo.Position).CompareTo(Point.Distance(b.Position, PlayerInfo.Position)));
 
             Point adjacentResource = GetAdjacentResource(map);
             if (!isFull && adjacentResource == null && possibleResources.Count > 0)
