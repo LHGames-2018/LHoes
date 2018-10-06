@@ -198,6 +198,24 @@ namespace LHGames.Bot
         /// </summary>
         internal void AfterTurn()
         {
+            Console.WriteLine("----------------------------");
+
+            Console.WriteLine("Health: " + PlayerInfo.Health.ToString());
+            Console.WriteLine("MaxHealth: " + PlayerInfo.MaxHealth.ToString());
+            Console.WriteLine("CarriedResources: " + PlayerInfo.CarriedResources.ToString());
+            Console.WriteLine("CarryingCapacity: " + PlayerInfo.CarryingCapacity.ToString());
+            Console.WriteLine("CollectingSpeed: " + PlayerInfo.CollectingSpeed.ToString());
+            Console.WriteLine("TotalResources: " + PlayerInfo.TotalResources.ToString());
+            Console.WriteLine("AttackPower: " + PlayerInfo.AttackPower.ToString());
+            Console.WriteLine("Defence: " + PlayerInfo.Defence.ToString());
+            Console.WriteLine("Position: " + PlayerInfo.Position.ToString());
+            Console.WriteLine("HouseLocation: " + PlayerInfo.HouseLocation.ToString());
+            foreach(PurchasableItem item in PlayerInfo.CarriedItems)
+                Console.WriteLine("Item: " + item.ToString());
+            foreach(UpgradeType upgrade in (UpgradeType[])Enum.GetValues(typeof(UpgradeType)))
+                Console.WriteLine(upgrade.ToString() + " Level: " + PlayerInfo.GetUpgradeLevel(upgrade));
+
+            Console.WriteLine("----------------------------");
         }
     }
 }
