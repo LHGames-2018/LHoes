@@ -58,10 +58,10 @@ namespace LHGames.Bot
 
             targets.Sort((a, b) => Point.Distance(a.Position, PlayerInfo.Position).CompareTo(Point.Distance(b.Position, PlayerInfo.Position)));
 
-            //if (targets.Count == 0)
+            if (targets.Count == 0)
                 action = MineResources(map);
-            /*else
-                action = AttackPlayer(targets[0], map);*/
+            else
+                action = AttackPlayer(targets[0], map);
                        
             var data = StorageHelper.Read<TestClass>("Test");
             Console.WriteLine(data?.Test);
